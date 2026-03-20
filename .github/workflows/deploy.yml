@@ -1,0 +1,49 @@
+name: Deploy to Contabo Production
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Copy files to Contabo Server via SCP
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          source: "."
+          target: "/opt/tchedes-dashboard"
+
+      - name: Rebuild Docker Container via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            cd /opt/tchedes-dashboard
+            
+            # Stop and remove the old dashboard container if it exists
+            docker compose stop tchedes-dashboard || true
+            docker compose rm -f tchedes-dashboard || true
+            
+            # Clean Next.js cache to ensure fresh build
+            rm -rf .next
+            
+            # Rebuild image cleanly using the repository-local Dockerfile
+            docker compose build --no-cache tchedes-dashboard
+            docker compose up -d tchedes-dashboard
+            
+            # The Nginx reverse proxy is already configured on the host to route
+            # app-tchedes.dartsia.app to localhost:3010
+            
+            echo "Deployment to Contabo successful! 🚀"

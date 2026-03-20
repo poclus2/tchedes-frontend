@@ -1,26 +1,65 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: #10b981;
+  --color-primary-dark: #059669;
+  --color-background-light: #f8fafc;
+  --color-background-dark: #0f172a;
+  --color-surface-light: #ffffff;
+  --color-surface-dark: #1e293b;
+  --font-sans: "Inter", sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --shadow-soft: 0 2px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.02), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+
+  /* Force all standard border-radius classes */
+  --radius-sm: 5px;
+  --radius-md: 5px;
+  --radius-lg: 5px;
+  --radius-xl: 5px;
+  --radius-2xl: 5px;
+  --radius-3xl: 5px;
+  --radius-4xl: 5px;
+  --radius: 5px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .status-pill {
+    @apply px-2.5 py-0.5 rounded-[5px] text-xs font-semibold inline-flex items-center;
+  }
+
+  .status-created {
+    @apply bg-slate-100 text-slate-600;
+  }
+
+  .status-processing {
+    @apply bg-blue-100 text-blue-600;
+  }
+
+  .status-review_required {
+    @apply bg-amber-100 text-amber-700;
+  }
+
+  .status-verified {
+    @apply bg-green-100 text-green-700;
+  }
+
+  .status-rejected {
+    @apply bg-red-100 text-red-700;
+  }
+
+  .sidebar-item {
+    @apply flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-primary transition-all rounded-[5px] font-medium;
+  }
+
+  .sidebar-item.active {
+    @apply bg-green-50 text-primary font-bold;
+  }
 }

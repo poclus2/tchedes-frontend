@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  tchedes-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tchedes-dashboard
+    restart: always
+    ports:
+      - "3010:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=https://api.dartsia.app
+    # Add any other required env vars here
