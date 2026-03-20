@@ -1,4 +1,4 @@
-name: Deploy to Contabo Production
+name: Deploy to Contabo (GHCR)
 
 on:
   push:
@@ -6,24 +6,49 @@ on:
       - main
       - master
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
-  deploy:
+  build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Copy files to Contabo Server via SCP
-        uses: appleboy/scp-action@master
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          source: "."
-          target: "/opt/tchedes-dashboard"
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Rebuild Docker Container via SSH
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -32,18 +57,22 @@ jobs:
           script: |
             cd /opt/tchedes-dashboard
             
-            # Stop and remove the old dashboard container if it exists
-            docker compose stop tchedes-dashboard || true
-            docker compose rm -f tchedes-dashboard || true
+            # Create a simple docker-compose.yml if it doesn't exist
+            cat <<EOF > docker-compose.yml
+            version: '3.8'
+            services:
+              tchedes-dashboard:
+                image: ghcr.io/${{ env.IMAGE_NAME }}:main
+                container_name: tchedes-dashboard
+                restart: always
+                ports:
+                  - "3010:3000"
+                environment:
+                  - NODE_ENV=production
+                  - NEXT_PUBLIC_API_URL=https://api-tchedes.dartsia.app
+            EOF
             
-            # Clean Next.js cache to ensure fresh build
-            rm -rf .next
-            
-            # Rebuild image cleanly using the repository-local Dockerfile
-            docker compose build --no-cache tchedes-dashboard
-            docker compose up -d tchedes-dashboard
-            
-            # The Nginx reverse proxy is already configured on the host to route
-            # app-tchedes.dartsia.app to localhost:3010
-            
-            echo "Deployment to Contabo successful! 🚀"
+            docker compose pull
+            docker compose down || true
+            docker compose up -d
+            echo "Successfully deployed ${{ env.IMAGE_NAME }} to Contabo! 🚀"
