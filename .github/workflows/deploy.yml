@@ -58,6 +58,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
+            mkdir -p /opt/tchedes-dashboard
             cd /opt/tchedes-dashboard
             
             # Create a simple docker-compose.yml if it doesn't exist
