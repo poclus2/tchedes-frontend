@@ -124,7 +124,7 @@ export default function KYBDetailPage({ params }: { params: { id: string } }) {
                             ].map(({ label, value, isMono, fullWidth }) => (
                                 <div key={label} className={fullWidth ? "col-span-2" : ""}>
                                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{label}</p>
-                                    <p className={\`text-sm font-medium text-slate-800 \${isMono ? 'font-mono' : ''}\`}>{value || "—"}</p>
+                                    <p className={`text-sm font-medium text-slate-800 ${isMono ? 'font-mono' : ''}`}>{value || "—"}</p>
                                 </div>
                             ))}
                     </div>
@@ -193,7 +193,7 @@ export default function KYBDetailPage({ params }: { params: { id: string } }) {
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         {dir.KycSession && (
-                                            <Link href={\`/sessions/\${dir.KycSession.id}\`}>
+                                            <Link href={`/sessions/${dir.KycSession.id}`}>
                                         <button className="text-primary hover:text-primary-dark font-semibold text-sm flex items-center gap-1 justify-end ml-auto">
                                             View KYC <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                                         </button>
@@ -216,7 +216,7 @@ export default function KYBDetailPage({ params }: { params: { id: string } }) {
         <div className="relative border-l-2 border-slate-100 ml-4 space-y-8 pb-4">
             {TIMELINE.map((event, i) => (
                             <div key={i} className="relative pl-6">
-                                <span className={\`material-symbols-outlined absolute -left-[17px] top-0 bg-white text-[28px] \${event.color}\`}>
+                                <span className={`material-symbols-outlined absolute -left-[17px] top-0 bg-white text-[28px] ${event.color}`}>
                                     {event.icon}
                                 </span>
                                 <div>

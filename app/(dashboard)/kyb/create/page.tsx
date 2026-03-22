@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 
 // Inline label to avoid missing @/components/ui/label dependency
 const Label = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-    <label className={\`text-xs font-bold text-slate-500 uppercase tracking-wider \${className}\`}>{children}</label>
+    <label className={`text-xs font-bold text-slate-500 uppercase tracking-wider ${className}`}>{children}</label>
 )
 
 const STEPS = [
@@ -70,14 +70,14 @@ export default function KYBCreateWizard() {
                         
                         return (
                             <div key={s.id} className="relative z-10 flex flex-col items-center bg-transparent group">
-                                <div className={\`flex items-center justify-center w-12 h-12 rounded-full border-4 shrink-0 transition-all duration-300
-                                    \${done ? "bg-primary border-white text-white shadow-sm" : 
+                                <div className={`flex items-center justify-center w-12 h-12 rounded-full border-4 shrink-0 transition-all duration-300
+                                    ${done ? "bg-primary border-white text-white shadow-sm" : 
                                       active ? "border-white bg-emerald-50 text-primary shadow-sm" : 
-                                      "border-white bg-slate-50 text-slate-400"}\`}>
-                                    <span className={\`material-symbols-outlined \${active ? 'text-[24px]' : 'text-[20px]'}\`}>{s.icon}</span>
+                                      "border-white bg-slate-50 text-slate-400"}`}>
+                                    <span className={`material-symbols-outlined ${active ? 'text-[24px]' : 'text-[20px]'}`}>{s.icon}</span>
                                 </div>
                                 <div className="absolute -bottom-6 w-32 text-center pointer-events-none">
-                                    <p className={\`text-xs font-bold \${active ? "text-primary" : done ? "text-slate-700" : "text-slate-400"}\`}>{s.title}</p>
+                                    <p className={`text-xs font-bold ${active ? "text-primary" : done ? "text-slate-700" : "text-slate-400"}`}>{s.title}</p>
                                 </div>
                             </div>
                         )
@@ -156,7 +156,7 @@ export default function KYBCreateWizard() {
                             {/* Document Upload */}
                             <div className="space-y-2 pt-2">
                                 <Label>Certificate of Incorporation (RCCM) *</Label>
-                                <div className={\`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer relative \${company.rccm_file ? 'border-primary bg-emerald-50/50' : 'border-slate-300 hover:border-primary hover:bg-slate-50'}\`}>
+                                <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer relative ${company.rccm_file ? 'border-primary bg-emerald-50/50' : 'border-slate-300 hover:border-primary hover:bg-slate-50'}`}>
                                     <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={e => setCompany({ ...company, rccm_file: e.target.files?.[0] ?? null })} />
                                     {company.rccm_file ? (
                                         <div className="flex flex-col items-center">
@@ -196,7 +196,7 @@ export default function KYBCreateWizard() {
                                     <span className="material-symbols-outlined text-primary">group</span>
                                     <h3 className="font-bold text-slate-900 text-lg">Directors / Ultimate Beneficial Owners</h3>
                                 </div>
-                                <span className={\`text-xs font-bold px-3 py-1.5 rounded-full \${totalOwnership > 100 ? "bg-rose-100 text-rose-700 border border-rose-200" : "bg-slate-100 text-slate-600 border border-slate-200"}\`}>
+                                <span className={`text-xs font-bold px-3 py-1.5 rounded-full ${totalOwnership > 100 ? "bg-rose-100 text-rose-700 border border-rose-200" : "bg-slate-100 text-slate-600 border border-slate-200"}`}>
                                     Total Ownership: {totalOwnership}%
                                 </span>
                             </div>
@@ -233,7 +233,7 @@ export default function KYBCreateWizard() {
                                             </div>
                                             <div className="space-y-2 col-span-2 pt-2">
                                                 <Label>Upload ID Document</Label>
-                                                <div className={\`border-2 border-dashed rounded-lg p-4 text-center transition-colors cursor-pointer relative \${dir.id_file ? 'border-primary bg-emerald-50/30' : 'border-slate-300 hover:border-primary hover:bg-slate-50 bg-white'}\`}>
+                                                <div className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors cursor-pointer relative ${dir.id_file ? 'border-primary bg-emerald-50/30' : 'border-slate-300 hover:border-primary hover:bg-slate-50 bg-white'}`}>
                                                     <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={e => updateDirector(i, "id_file", e.target.files?.[0] ?? null)} />
                                                     {dir.id_file ? (
                                                         <div className="flex items-center justify-center gap-2">
@@ -297,7 +297,7 @@ export default function KYBCreateWizard() {
                                     ].map(({ label, value, isMono, alert }) => (
                                         <div key={label}>
                                             <dt className="text-xs text-slate-500 mb-1">{label}</dt>
-                                            <dd className={\`text-sm font-bold \${alert ? 'text-rose-500' : 'text-slate-800'} \${isMono ? 'font-mono' : ''}\`}>{value}</dd>
+                                            <dd className={`text-sm font-bold ${alert ? 'text-rose-500' : 'text-slate-800'} ${isMono ? 'font-mono' : ''}`}>{value}</dd>
                                         </div>
                                     ))}
                                 </dl>
@@ -318,7 +318,7 @@ export default function KYBCreateWizard() {
                                             </div>
                                             <div className="text-right">
                                                 <p className="font-mono text-sm font-bold text-slate-700">{dir.ownership_percentage}%</p>
-                                                <p className={\`text-xs font-semibold \${dir.id_file ? 'text-emerald-600' : 'text-slate-400'}\`}>
+                                                <p className={`text-xs font-semibold ${dir.id_file ? 'text-emerald-600' : 'text-slate-400'}`}>
                                                     {dir.id_file ? "ID Attached" : "No ID"}
                                                 </p>
                                             </div>

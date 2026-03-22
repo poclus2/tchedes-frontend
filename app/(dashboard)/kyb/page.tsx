@@ -146,16 +146,16 @@ export default function KYBVerifications() {
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-24 bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                                                    <div className={`${getScoreColor(session.confidence_score)} h-full`} style={{ width: \`\${session.confidence_score || 0}%\` }}></div>
+                                                    <div className={`${getScoreColor(session.confidence_score)} h-full`} style={{ width: `${session.confidence_score || 0}%` }}></div>
                                                 </div>
-                                                <span className="text-sm font-bold text-slate-700">{session.confidence_score != null ? \`\${session.confidence_score}%\` : '--'}</span>
+                                                <span className="text-sm font-bold text-slate-700">{session.confidence_score != null ? `${session.confidence_score}%` : '--'}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-slate-600">
                                             {format(new Date(session.createdAt), "MMM d, yyyy · HH:mm")}
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <Link href={\`/kyb/\${session.id}\`} className="text-slate-400 hover:text-primary p-1 inline-flex">
+                                            <Link href={`/kyb/${session.id}`} className="text-slate-400 hover:text-primary p-1 inline-flex">
                                                 <span className="material-symbols-outlined text-lg">visibility</span>
                                             </Link>
                                             <button className="text-slate-400 hover:text-slate-600 p-1">
