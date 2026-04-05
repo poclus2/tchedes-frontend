@@ -23,7 +23,8 @@ export default function LoginPage() {
             const result = await login({ email, password });
             if (result.token) {
                 // Set cookie for Next.js Middleware (expires in 24 hours for MVP)
-                document.cookie = `tchedes_auth_token=${result.token}; path=/; max-age=86400; SameSite=Lax`;
+                // Added ; Secure for HTTPS compatibility
+                document.cookie = `tchedes_auth_token=${result.token}; path=/; max-age=86400; SameSite=Lax; Secure`;
 
                 // For MVP: Also keep in localStorage for easy client-side access if needed
                 localStorage.setItem("tchedes_auth_token", result.token);
@@ -31,10 +32,10 @@ export default function LoginPage() {
                 localStorage.setItem("tchedes_user", JSON.stringify(result.user));
 
                 setIsSuccess(true);
-                // Delay redirect to show success animation
+                // Use window.location.href for a hard redirect to ensure middleware picks up the cookie
                 setTimeout(() => {
-                    router.push("/overview");
-                }, 1500);
+                    window.location.href = "/overview";
+                }, 1000);
             }
         } catch (err: any) {
             setError(err.message || "An error occurred during login.");
