@@ -1,65 +1,110 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-primary: #10b981;
-  --color-primary-dark: #059669;
-  --color-background-light: #f8fafc;
-  --color-background-dark: #0f172a;
-  --color-surface-light: #ffffff;
-  --color-surface-dark: #1e293b;
-  --font-sans: "Inter", sans-serif;
-  --font-display: "Space Grotesk", sans-serif;
-  --shadow-soft: 0 2px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
-  --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.02), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+  /* ── Brand ─────────────────────────────────────────── */
+  --color-primary:       #635bff;
+  --color-primary-dark:  #4f46e5;
+  --color-primary-glow:  rgba(99, 91, 255, 0.15);
 
-  /* Force all standard border-radius classes */
-  --radius-sm: 5px;
-  --radius-md: 5px;
-  --radius-lg: 5px;
-  --radius-xl: 5px;
-  --radius-2xl: 5px;
-  --radius-3xl: 5px;
-  --radius-4xl: 5px;
-  --radius: 5px;
+  /* ── Surfaces ───────────────────────────────────────── */
+  --color-sidebar:       #0a0f1e;
+  --color-sidebar-hover: rgba(255,255,255,0.05);
+  --color-sidebar-active:rgba(99,91,255,0.12);
+  --color-background:    #f9f9f7;
+  --color-surface:       #ffffff;
+
+  /* ── Typography ──────────────────────────────────────── */
+  --font-sans:    "Sora", "Inter", sans-serif;
+  --font-display: "Sora", sans-serif;
+  --font-mono:    "JetBrains Mono", "Fira Code", monospace;
+
+  /* ── Shadows ─────────────────────────────────────────── */
+  --shadow-soft: 0 2px 15px -3px rgba(0,0,0,0.04), 0 4px 6px -2px rgba(0,0,0,0.02);
+  --shadow-card: 0 10px 25px -5px rgba(0,0,0,0.03), 0 8px 10px -6px rgba(0,0,0,0.02);
+  --shadow-glow: 0 0 40px rgba(99,91,255,0.12);
+
+  /* ── Radii ───────────────────────────────────────────── */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  14px;
+  --radius-xl:  18px;
+  --radius-2xl: 22px;
+  --radius-3xl: 28px;
+  --radius:     10px;
 }
 
 @layer base {
   body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-family: "Sora", "Inter", sans-serif;
   }
 }
 
 @layer components {
+  /* ── Status pills ──────────────────────────────────────── */
   .status-pill {
-    @apply px-2.5 py-0.5 rounded-[5px] text-xs font-semibold inline-flex items-center;
+    @apply px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest inline-flex items-center gap-1.5;
+  }
+  .status-pill::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.6;
+    flex-shrink: 0;
   }
 
   .status-created {
-    @apply bg-slate-100 text-slate-600;
+    @apply bg-slate-100 text-slate-500;
   }
-
   .status-processing {
-    @apply bg-blue-100 text-blue-600;
+    background: rgba(59,130,246,0.1);
+    color: #3b82f6;
   }
-
   .status-review_required {
-    @apply bg-amber-100 text-amber-700;
+    background: rgba(251,146,60,0.12);
+    color: #f97316;
   }
-
   .status-verified {
-    @apply bg-green-100 text-green-700;
+    background: rgba(16,185,129,0.1);
+    color: #10b981;
   }
-
   .status-rejected {
-    @apply bg-red-100 text-red-700;
+    background: rgba(248,113,113,0.12);
+    color: #f87171;
   }
 
+  /* ── Sidebar nav items ─────────────────────────────────── */
   .sidebar-item {
-    @apply flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-primary transition-all rounded-[5px] font-medium;
+    @apply flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-150;
+    color: rgba(255,255,255,0.4);
+  }
+  .sidebar-item:hover {
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.85);
+  }
+  .sidebar-item.active {
+    background: rgba(99,91,255,0.15);
+    color: #a5b4fc;
+    font-weight: 700;
+    border: 1px solid rgba(99,91,255,0.2);
   }
 
-  .sidebar-item.active {
-    @apply bg-green-50 text-primary font-bold;
+  /* ── Stat cards ────────────────────────────────────────── */
+  .stat-card-dark {
+    background: #0a0f1e;
+    border-radius: 20px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card-light {
+    background: #f9f9f7;
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 20px;
+    padding: 28px;
+    position: relative;
   }
 }

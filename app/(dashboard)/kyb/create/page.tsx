@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { createKybSession, uploadKybDocument, addKybDirector, submitKybSession } from "@/lib/api"
 
 // Inline label to avoid missing @/components/ui/label dependency
 const Label = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
@@ -17,9 +18,9 @@ const STEPS = [
 const COMPANY_TYPES = ["SARL", "SA", "SAS", "SNC", "GIE", "LLC", "Other"]
 const COUNTRIES = [{ code: "CM", name: "Cameroon" }, { code: "NG", name: "Nigeria" }, { code: "SN", name: "Senegal" }, { code: "CI", name: "Côte d'Ivoire" }, { code: "FR", name: "France" }]
 
-type Director = { full_name: string; date_of_birth: string; nationality: string; ownership_percentage: string; id_file: File | null }
+type Director = { full_name: string; email: string; date_of_birth: string; nationality: string; ownership_percentage: string; }
 
-const emptyDirector = (): Director => ({ full_name: "", date_of_birth: "", nationality: "CM", ownership_percentage: "", id_file: null })
+const emptyDirector = (): Director => ({ full_name: "", email: "", date_of_birth: "", nationality: "CM", ownership_percentage: "" })
 
 export default function KYBCreateWizard() {
     const router = useRouter()
@@ -28,8 +29,8 @@ export default function KYBCreateWizard() {
 
     // Step 1 state
     const [company, setCompany] = useState({
-        company_name: "", country: "CM", registration_number: "",
-        company_type: "SARL", incorporation_date: "", registered_address: "", rccm_file: null as File | null
+        company_name: "", country: "CM", registration_number: "", tax_id_number: "",
+        company_type: "SARL", incorporation_date: "", registered_address: "", rccm_file: null as File | null, tax_file: null as File | null
     })
 
     // Step 2 state
@@ -46,10 +47,49 @@ export default function KYBCreateWizard() {
     const totalOwnership = directors.reduce((sum, d) => sum + (parseFloat(d.ownership_percentage) || 0), 0)
 
     const handleSubmit = async () => {
-        setSubmitting(true)
-        await new Promise(r => setTimeout(r, 1500))
-        setSubmitting(false)
-        router.push("/kyb")
+        try {
+            setSubmitting(true)
+            
+            // 1. Create Session
+            const sessionRes = await createKybSession({
+                company_name: company.company_name,
+                country: company.country,
+                registration_number: company.registration_number,
+                tax_id_number: company.tax_id_number,
+                company_type: company.company_type,
+                incorporation_date: company.incorporation_date,
+                registered_address: company.registered_address
+            });
+            const sessionId = sessionRes.kyb_session_id;
+
+            // 2. Upload Documents
+            if (company.rccm_file) {
+                await uploadKybDocument(sessionId, company.rccm_file, 'rccm');
+            }
+            if (company.tax_file) {
+                await uploadKybDocument(sessionId, company.tax_file, 'tax');
+            }
+
+            // 3. Add Directors
+            for (const dir of directors) {
+                await addKybDirector(sessionId, {
+                    full_name: dir.full_name,
+                    email: dir.email,
+                    date_of_birth: dir.date_of_birth,
+                    nationality: dir.nationality,
+                    ownership_percentage: dir.ownership_percentage
+                });
+            }
+
+            // 4. Submit
+            await submitKybSession(sessionId);
+
+            router.push("/kyb")
+        } catch (error) {
+            console.error(error);
+            alert("Failed to submit verification. Please try again.");
+            setSubmitting(false);
+        }
     }
 
     return (
@@ -124,6 +164,15 @@ export default function KYBCreateWizard() {
                                     />
                                 </div>
                                 <div className="space-y-2">
+                                    <Label>Tax ID Number (NIU) *</Label>
+                                    <input 
+                                        className="w-full h-11 px-4 text-sm border-slate-200 rounded-lg focus:ring-primary focus:border-primary outline-none ring-1 ring-slate-200 font-mono" 
+                                        placeholder="e.g. M123456789" 
+                                        value={company.tax_id_number} 
+                                        onChange={e => setCompany({ ...company, tax_id_number: e.target.value })} 
+                                    />
+                                </div>
+                                <div className="space-y-2">
                                     <Label>Company Type *</Label>
                                     <select 
                                         className="w-full h-11 px-4 text-sm border-slate-200 rounded-lg focus:ring-primary focus:border-primary outline-none ring-1 ring-slate-200 bg-white" 
@@ -142,7 +191,7 @@ export default function KYBCreateWizard() {
                                         onChange={e => setCompany({ ...company, incorporation_date: e.target.value })} 
                                     />
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-2 col-span-2">
                                     <Label>Registered Address</Label>
                                     <input 
                                         className="w-full h-11 px-4 text-sm border-slate-200 rounded-lg focus:ring-primary focus:border-primary outline-none ring-1 ring-slate-200" 
@@ -154,32 +203,47 @@ export default function KYBCreateWizard() {
                             </div>
                             
                             {/* Document Upload */}
-                            <div className="space-y-2 pt-2">
-                                <Label>Certificate of Incorporation (RCCM) *</Label>
-                                <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer relative ${company.rccm_file ? 'border-primary bg-emerald-50/50' : 'border-slate-300 hover:border-primary hover:bg-slate-50'}`}>
-                                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={e => setCompany({ ...company, rccm_file: e.target.files?.[0] ?? null })} />
-                                    {company.rccm_file ? (
-                                        <div className="flex flex-col items-center">
-                                            <span className="material-symbols-outlined text-primary text-4xl mb-2">task</span>
-                                            <p className="text-sm font-bold text-slate-800">{company.rccm_file.name}</p>
-                                            <p className="text-xs text-primary font-semibold mt-1">Ready to upload</p>
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-col items-center">
-                                            <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-3">
-                                                <span className="material-symbols-outlined text-slate-400">upload_file</span>
+                            <div className="grid grid-cols-2 gap-x-6">
+                                <div className="space-y-2 pt-2">
+                                    <Label>Certificate of Incorporation (RCCM) *</Label>
+                                    <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer relative ${company.rccm_file ? 'border-primary bg-emerald-50/50' : 'border-slate-300 hover:border-primary hover:bg-slate-50'}`}>
+                                        <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={e => setCompany({ ...company, rccm_file: e.target.files?.[0] ?? null })} />
+                                        {company.rccm_file ? (
+                                            <div className="flex flex-col items-center">
+                                                <span className="material-symbols-outlined text-primary text-3xl mb-1">task</span>
+                                                <p className="text-xs font-bold text-slate-800 break-all">{company.rccm_file.name}</p>
                                             </div>
-                                            <p className="text-slate-700 text-sm font-bold">Click to upload RCCM or Certificate</p>
-                                            <p className="text-slate-400 text-xs mt-1">PDF, JPG, PNG — max 10MB</p>
-                                        </div>
-                                    )}
+                                        ) : (
+                                            <div className="flex flex-col items-center">
+                                                <span className="material-symbols-outlined text-slate-400 text-3xl mb-1">upload_file</span>
+                                                <p className="text-slate-700 text-xs font-bold">Upload RCCM</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="space-y-2 pt-2">
+                                    <Label>Tax Certificate (NIU) *</Label>
+                                    <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer relative ${company.tax_file ? 'border-primary bg-emerald-50/50' : 'border-slate-300 hover:border-primary hover:bg-slate-50'}`}>
+                                        <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={e => setCompany({ ...company, tax_file: e.target.files?.[0] ?? null })} />
+                                        {company.tax_file ? (
+                                            <div className="flex flex-col items-center">
+                                                <span className="material-symbols-outlined text-primary text-3xl mb-1">task</span>
+                                                <p className="text-xs font-bold text-slate-800 break-all">{company.tax_file.name}</p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center">
+                                                <span className="material-symbols-outlined text-slate-400 text-3xl mb-1">upload_file</span>
+                                                <p className="text-slate-700 text-xs font-bold">Upload Tax Card</p>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                             
                             <div className="flex justify-end pt-6 border-t border-slate-100">
                                 <button
                                     className="bg-primary hover:bg-primary-dark text-white px-6 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={!company.company_name || !company.registration_number || !company.rccm_file}
+                                    disabled={!company.company_name || !company.registration_number || !company.tax_id_number || !company.rccm_file || !company.tax_file}
                                     onClick={() => setStep(2)}
                                 >
                                     Next: Add Directors <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
@@ -218,6 +282,10 @@ export default function KYBCreateWizard() {
                                                 <input className="w-full h-11 px-4 text-sm border-slate-200 rounded-lg focus:ring-primary focus:border-primary outline-none ring-1 ring-slate-200 bg-white" placeholder="Jean Baptiste Mbeng" value={dir.full_name} onChange={e => updateDirector(i, "full_name", e.target.value)} />
                                             </div>
                                             <div className="space-y-2">
+                                                <Label>Email Address *</Label>
+                                                <input type="email" className="w-full h-11 px-4 text-sm border-slate-200 rounded-lg focus:ring-primary focus:border-primary outline-none ring-1 ring-slate-200 bg-white" placeholder="director@company.com" value={dir.email} onChange={e => updateDirector(i, "email", e.target.value)} />
+                                            </div>
+                                            <div className="space-y-2">
                                                 <Label>Date of Birth</Label>
                                                 <input type="date" className="w-full h-11 px-4 text-sm border-slate-200 rounded-lg focus:ring-primary focus:border-primary outline-none ring-1 ring-slate-200 bg-white" value={dir.date_of_birth} onChange={e => updateDirector(i, "date_of_birth", e.target.value)} />
                                             </div>
@@ -231,22 +299,11 @@ export default function KYBCreateWizard() {
                                                 <Label>Ownership % *</Label>
                                                 <input type="number" min="1" max="100" className="w-full h-11 px-4 text-sm border-slate-200 rounded-lg focus:ring-primary focus:border-primary outline-none ring-1 ring-slate-200 bg-white font-mono" placeholder="e.g. 60" value={dir.ownership_percentage} onChange={e => updateDirector(i, "ownership_percentage", e.target.value)} />
                                             </div>
-                                            <div className="space-y-2 col-span-2 pt-2">
-                                                <Label>Upload ID Document</Label>
-                                                <div className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors cursor-pointer relative ${dir.id_file ? 'border-primary bg-emerald-50/30' : 'border-slate-300 hover:border-primary hover:bg-slate-50 bg-white'}`}>
-                                                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={e => updateDirector(i, "id_file", e.target.files?.[0] ?? null)} />
-                                                    {dir.id_file ? (
-                                                        <div className="flex items-center justify-center gap-2">
-                                                            <span className="material-symbols-outlined text-primary text-xl">insert_drive_file</span>
-                                                            <span className="text-sm font-bold text-slate-800">{dir.id_file.name}</span>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex items-center justify-center gap-2 text-slate-500">
-                                                            <span className="material-symbols-outlined text-xl">add_photo_alternate</span>
-                                                            <span className="text-sm font-bold">Click to upload director's ID document (CNI, Passport...)</span>
-                                                        </div>
-                                                    )}
-                                                </div>
+                                            <div className="space-y-2 col-span-2">
+                                                <p className="text-xs text-slate-500 bg-blue-50 border border-blue-100 p-3 rounded-lg flex gap-2">
+                                                    <span className="material-symbols-outlined text-blue-500 text-[18px]">mail</span>
+                                                    <span>An email will be sent to <strong>{dir.email || 'this director'}</strong> with a secure link to complete their individual KYC verification.</span>
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
@@ -263,7 +320,7 @@ export default function KYBCreateWizard() {
                                 </button>
                                 <button
                                     className="bg-primary hover:bg-primary-dark text-white px-6 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={directors.some(d => !d.full_name || !d.ownership_percentage) || totalOwnership > 100}
+                                    disabled={directors.some(d => !d.full_name || !d.email || !d.ownership_percentage) || totalOwnership > 100}
                                     onClick={() => setStep(3)}
                                 >
                                     Next: Review <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
@@ -291,9 +348,10 @@ export default function KYBCreateWizard() {
                                         { label: "Company Name", value: company.company_name },
                                         { label: "Country", value: company.country },
                                         { label: "Registration Number", value: company.registration_number, isMono: true },
+                                        { label: "Tax ID Number (NIU)", value: company.tax_id_number, isMono: true },
                                         { label: "Company Type", value: company.company_type },
-                                        { label: "Incorporation Date", value: company.incorporation_date || "—" },
-                                        { label: "Document", value: company.rccm_file?.name || "Missing Document", alert: !company.rccm_file },
+                                        { label: "RCCM Document", value: company.rccm_file?.name || "Missing Document", alert: !company.rccm_file },
+                                        { label: "NIU Document", value: company.tax_file?.name || "Missing Document", alert: !company.tax_file },
                                     ].map(({ label, value, isMono, alert }) => (
                                         <div key={label}>
                                             <dt className="text-xs text-slate-500 mb-1">{label}</dt>
@@ -318,8 +376,8 @@ export default function KYBCreateWizard() {
                                             </div>
                                             <div className="text-right">
                                                 <p className="font-mono text-sm font-bold text-slate-700">{dir.ownership_percentage}%</p>
-                                                <p className={`text-xs font-semibold ${dir.id_file ? 'text-emerald-600' : 'text-slate-400'}`}>
-                                                    {dir.id_file ? "ID Attached" : "No ID"}
+                                                <p className="text-xs font-semibold text-blue-600 truncate max-w-[150px]">
+                                                    {dir.email}
                                                 </p>
                                             </div>
                                         </div>

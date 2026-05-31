@@ -59,11 +59,9 @@ function VerifyFlow() {
 
             {/* Header */}
             <div className="w-full max-w-lg flex justify-between items-center mb-8">
-                <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white font-bold">
-                        T
-                    </div>
-                    <span className="font-bold text-slate-900 text-xl tracking-tight">Tchedés</span>
+                <div className="flex items-center gap-2">
+                    <img src="/logo.svg" alt="Tchedes Logo" className="w-auto h-7" />
+                    <span className="font-bold text-lg tracking-wider uppercase" style={{ color: "#635bff" }}>TCHEDES</span>
                 </div>
                 <div className="flex items-center space-x-2 text-sm text-slate-500 font-medium">
                     <span className="material-symbols-outlined text-emerald-500 text-lg">lock</span>

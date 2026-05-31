@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { format } from "date-fns"
 import Link from 'next/link'
+import { fetchKybSessions } from "@/lib/api"
 
 export default function KYBVerifications() {
     const [sessions, setSessions] = useState<any[]>([])
@@ -13,12 +14,8 @@ export default function KYBVerifications() {
         const fetchSessions = async () => {
             try {
                 setLoading(true)
-                setSessions([
-                    { id: 'kyb_1234abc', reference_id: 'REF-8392-CM', company_name: 'Harestech LLC', country: 'CM', registration_number: 'RC/DLA/2021/B/123', status: 'verified', confidence_score: 98, createdAt: new Date().toISOString() },
-                    { id: 'kyb_5678def', reference_id: 'REF-1192-CM', company_name: 'NeoBank S.A.', country: 'CM', registration_number: 'RC/YDE/2023/M/456', status: 'review_required', confidence_score: 82, createdAt: new Date(Date.now() - 86400000).toISOString() },
-                    { id: 'kyb_9999xyz', reference_id: 'REF-7741-NG', company_name: 'Crypto Trading Inc', country: 'NG', registration_number: 'BN-1234567', status: 'rejected', confidence_score: 45, createdAt: new Date(Date.now() - 172800000).toISOString() },
-                    { id: 'kyb_4444lmn', reference_id: 'REF-2290-CM', company_name: 'Logistics Pro', country: 'CM', registration_number: 'RC/DLA/2024/B/789', status: 'processing', confidence_score: null, createdAt: new Date().toISOString() }
-                ])
+                const data = await fetchKybSessions();
+                setSessions(data);
 
             } catch (error) {
                 console.error("Failed to fetch KYB sessions", error)
@@ -128,8 +125,7 @@ export default function KYBVerifications() {
                                 return (
                                     <tr key={session.id} className="hover:bg-slate-50 transition-colors">
                                         <td className="px-6 py-4">
-                                            <div className="font-mono text-sm font-bold text-slate-900">{session.reference_id}</div>
-                                            <div className="text-[10px] text-slate-400">{prefixId}</div>
+                                            <div className="font-mono text-sm font-bold text-slate-900">{prefixId}</div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="font-semibold text-slate-900 text-sm">{session.company_name}</div>

@@ -1,3 +1,5 @@
+"use client";
+
 import { Sidebar } from "@/components/layout/sidebar";
 
 export default function DashboardLayout({
@@ -6,38 +8,76 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex min-h-screen">
-            {/* Sidebar (Fixed width 64 = 256px) */}
+        <div className="flex min-h-screen" style={{ fontFamily: "'Sora', sans-serif" }}>
+            {/* Sidebar */}
             <Sidebar />
 
-            {/* Main Content Wrapper */}
-            <main className="flex-1 ml-64 min-h-screen flex flex-col">
+            {/* Main content */}
+            <main className="flex-1 ml-64 min-h-screen flex flex-col" style={{ background: "#f9f9f7" }}>
+
                 {/* Top Header */}
-                <header className="h-16 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-10 px-8 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
+                <header
+                    className="h-14 sticky top-0 z-10 px-8 flex items-center justify-between"
+                    style={{
+                        background: "rgba(249,249,247,0.85)",
+                        backdropFilter: "blur(12px)",
+                        borderBottom: "1px solid rgba(0,0,0,0.06)",
+                    }}
+                >
+                    {/* Left — breadcrumb area */}
+                    <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2">
-                            <span className="flex h-2 w-2 rounded-full bg-primary"></span>
-                            <span className="text-xs font-bold text-primary uppercase tracking-wider">Live</span>
+                            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#635bff" }} />
+                            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#635bff" }}>
+                                Live
+                            </span>
                         </div>
+                        <div className="w-px h-4 bg-gray-200" />
+                        <span className="text-xs font-medium text-gray-400">Dashboard</span>
                     </div>
-                    <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100">
-                            <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
-                            <span className="text-xs font-semibold text-primary">API Connected</span>
+
+                    {/* Right — actions */}
+                    <div className="flex items-center gap-3">
+                        {/* API status */}
+                        <div
+                            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold"
+                            style={{
+                                background: "rgba(16,185,129,0.08)",
+                                border: "1px solid rgba(16,185,129,0.15)",
+                                color: "#10b981",
+                            }}
+                        >
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                            API Connectée
                         </div>
-                        <div className="flex items-center gap-3">
-                            <button className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors">
-                                <span className="material-symbols-outlined text-slate-500 text-xl">notifications</span>
-                            </button>
-                            <button className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors">
-                                <span className="material-symbols-outlined text-slate-500 text-xl">help</span>
-                            </button>
-                        </div>
+
+                        {/* Notifications */}
+                        <button
+                            className="w-8 h-8 rounded-xl flex items-center justify-center transition-colors"
+                            style={{ border: "1px solid rgba(0,0,0,0.07)", background: "#fff" }}
+                            onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f0")}
+                            onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
+                        >
+                            <span className="material-symbols-outlined text-gray-400" style={{ fontSize: 17 }}>
+                                notifications
+                            </span>
+                        </button>
+
+                        {/* Help */}
+                        <button
+                            className="w-8 h-8 rounded-xl flex items-center justify-center transition-colors"
+                            style={{ border: "1px solid rgba(0,0,0,0.07)", background: "#fff" }}
+                            onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f0")}
+                            onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
+                        >
+                            <span className="material-symbols-outlined text-gray-400" style={{ fontSize: 17 }}>
+                                help
+                            </span>
+                        </button>
                     </div>
                 </header>
 
-                {/* Page Content */}
+                {/* Page content */}
                 {children}
             </main>
         </div>

@@ -1,32 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { format } from "date-fns"
+import { fetchKybSession } from "@/lib/api"
 
-// ─── Demo Data ─────────
-const DEMO_KYB: Record<string, any> = {
-    "kyb_5678def": {
-        id: "kyb_5678def",
-        reference_id: "REF-1192-CM",
-        company_name: "NeoBank S.A.",
-        country: "CM",
-        registration_number: "RC/YDE/2023/M/456",
-        company_type: "SA",
-        incorporation_date: "2023-04-15",
-        registered_address: "Rue de la Réunification, Yaoundé, Cameroun",
-        status: "review_required",
-        confidence_score: 82,
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-        Documents: [
-            { id: "doc_1", type: "rccm", s3_key: "/uploads/rccm-neobank.jpg", createdAt: new Date().toISOString() },
-        ],
-        Directors: [
-            { id: "dir_1", full_name: "Jean Baptiste Mbeng", nationality: "CM", ownership_percentage: 60, KycSession: { id: "kyc_abc", status: "verified" } },
-            { id: "dir_2", full_name: "Laure Ngono", nationality: "CM", ownership_percentage: 40, KycSession: { id: "kyc_def", status: "review_required" } },
-        ]
-    }
-}
+
 
 const TIMELINE = [
     { icon: "security", color: "text-blue-500", label: "KYB Session Created", time: "Mar 5, 2026 10:00" },
@@ -51,9 +30,28 @@ const getStatusBadge = (status: string) => {
 }
 
 export default function KYBDetailPage({ params }: { params: { id: string } }) {
-    const session = DEMO_KYB[params.id] || DEMO_KYB["kyb_5678def"]
+    const [session, setSession] = useState<any>(null)
+    const [loading, setLoading] = useState(true)
     const [approveLoading, setApproveLoading] = useState(false)
     const [rejectLoading, setRejectLoading] = useState(false)
+
+    useEffect(() => {
+        const loadSession = async () => {
+            try {
+                const data = await fetchKybSession(params.id);
+                setSession(data);
+            } catch (error) {
+                console.error("Failed to fetch KYB session", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadSession();
+    }, [params.id]);
+
+    if (loading) {
+        return <div className="p-8 text-slate-500 text-center mt-10">Loading KYB Session...</div>
+    }
 
     if (!session) {
         return <div className="p-8 text-slate-500 text-center mt-10">KYB Session not found.</div>
@@ -118,6 +116,7 @@ export default function KYBDetailPage({ params }: { params: { id: string } }) {
                                 { label: "Company Name", value: session.company_name },
                                 { label: "Country", value: session.country },
                                 { label: "Registration Number", value: session.registration_number, isMono: true },
+                                { label: "Tax ID Number (NIU)", value: session.tax_id_number, isMono: true },
                                 { label: "Company Type", value: session.company_type },
                                 { label: "Incorporation Date", value: session.incorporation_date },
                                 { label: "Registered Address", value: session.registered_address, fullWidth: true },
@@ -183,7 +182,10 @@ export default function KYBDetailPage({ params }: { params: { id: string } }) {
                         <tbody className="divide-y divide-slate-100">
                             {session.Directors.map((dir: any) => (
                                 <tr key={dir.id} className="hover:bg-slate-50 transition-colors">
-                                    <td className="px-6 py-4 font-bold text-sm text-slate-800">{dir.full_name}</td>
+                                    <td className="px-6 py-4">
+                                        <div className="font-bold text-sm text-slate-800">{dir.full_name}</div>
+                                        <div className="text-xs text-blue-600 truncate mt-0.5 max-w-[150px]">{dir.email}</div>
+                                    </td>
                                     <td className="px-6 py-4 text-sm text-slate-600">
                                         <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">{dir.nationality}</span>
                                     </td>

@@ -125,3 +125,82 @@ export async function submitHostedSession(token: string) {
 
   return res.json();
 }
+
+// ==========================================
+// KYB API FUNCTIONS
+// ==========================================
+
+const KYB_API_BASE = `${BASE_URL}/v1/identity/kyb`;
+
+export async function createKybSession(data: any) {
+  const res = await fetch(`${KYB_API_BASE}/sessions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken()}`
+    },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error((await res.json()).error || "Failed to create KYB session");
+  return res.json();
+}
+
+export async function uploadKybDocument(sessionId: string, file: File, type: "rccm" | "tax") {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("type", type);
+
+  const res = await fetch(`${KYB_API_BASE}/sessions/${sessionId}/documents`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${getToken()}`
+    },
+    body: formData
+  });
+  if (!res.ok) throw new Error((await res.json()).error || "Failed to upload document");
+  return res.json();
+}
+
+export async function addKybDirector(sessionId: string, data: any) {
+  const res = await fetch(`${KYB_API_BASE}/sessions/${sessionId}/directors`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken()}`
+    },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error((await res.json()).error || "Failed to add director");
+  return res.json();
+}
+
+export async function submitKybSession(sessionId: string) {
+  const res = await fetch(`${KYB_API_BASE}/sessions/${sessionId}/submit`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${getToken()}`
+    }
+  });
+  if (!res.ok) throw new Error((await res.json()).error || "Failed to submit KYB session");
+  return res.json();
+}
+
+export async function fetchKybSessions() {
+  const res = await fetch(`${KYB_API_BASE}/sessions`, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`
+    }
+  });
+  if (!res.ok) throw new Error("Failed to fetch KYB sessions");
+  return res.json();
+}
+
+export async function fetchKybSession(id: string) {
+  const res = await fetch(`${KYB_API_BASE}/sessions/${id}`, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`
+    }
+  });
+  if (!res.ok) throw new Error("Failed to fetch KYB session details");
+  return res.json();
+}

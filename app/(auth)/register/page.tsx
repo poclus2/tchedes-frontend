@@ -66,9 +66,9 @@ export default function RegisterPage() {
             {/* Left Column - Form */}
             <div className="w-full lg:w-1/2 p-8 lg:p-12 xl:p-16 flex flex-col justify-center">
                 <div className="mb-8">
-                    <Link className="flex items-center space-x-2 mb-8" href="/">
-                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-display font-bold text-xl">T</div>
-                        <span className="text-2xl font-bold font-display tracking-tight text-slate-900">Tchedés</span>
+                    <Link className="flex items-center gap-2 mb-8" href="/">
+                        <img src="/logo.svg" alt="Tchedes Logo" className="w-auto h-8" />
+                        <span className="text-xl font-bold font-display tracking-wider uppercase" style={{ color: "#635bff" }}>TCHEDES</span>
                     </Link>
                     <h1 className="text-3xl font-bold font-display text-slate-900 mb-2">Create your Tchedés account</h1>
                     <p className="text-slate-500 text-lg">Start building compliant products in minutes.</p>
