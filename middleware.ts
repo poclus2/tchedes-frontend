@@ -20,9 +20,9 @@ export function middleware(request: NextRequest) {
     const isAuthRoute = authRoutes.some(route => pathname.startsWith(route));
 
     if (isAuthRoute && token) {
-        // Redirect to overview if trying to access auth pages while logged in
-        const overviewUrl = new URL('/overview', request.url);
-        return NextResponse.redirect(overviewUrl);
+        // Redirect to portal if trying to access auth pages while logged in
+        const portalUrl = new URL('/portal', request.url);
+        return NextResponse.redirect(portalUrl);
     }
 
     return NextResponse.next();

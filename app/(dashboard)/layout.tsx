@@ -1,12 +1,18 @@
 "use client";
 
 import { Sidebar } from "@/components/layout/sidebar";
+import { usePathname } from "next/navigation";
 
 export default function DashboardLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const pathname = usePathname();
+    const isPayModule = pathname.startsWith('/pay/');
+    const activeColor = isPayModule ? '#10b981' : '#635bff';
+    const moduleName = isPayModule ? 'Tchedes Pay' : 'Dashboard';
+
     return (
         <div className="flex min-h-screen" style={{ fontFamily: "'Sora', sans-serif" }}>
             {/* Sidebar */}
@@ -27,13 +33,13 @@ export default function DashboardLayout({
                     {/* Left — breadcrumb area */}
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#635bff" }} />
-                            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#635bff" }}>
+                            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: activeColor }} />
+                            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: activeColor }}>
                                 Live
                             </span>
                         </div>
                         <div className="w-px h-4 bg-gray-200" />
-                        <span className="text-xs font-medium text-gray-400">Dashboard</span>
+                        <span className="text-xs font-medium text-gray-400">{moduleName}</span>
                     </div>
 
                     {/* Right — actions */}

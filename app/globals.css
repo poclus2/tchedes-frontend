@@ -107,4 +107,23 @@
     padding: 28px;
     position: relative;
   }
+
+  @keyframes cityScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  
+  @keyframes floatCloud {
+    0% { transform: translateX(100vw); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateX(-100%); opacity: 0; }
+  }
+
+  .animate-city-scroll {
+    animation: cityScroll 60s linear infinite;
+  }
+  .animate-city-scroll-fast {
+    animation: cityScroll 35s linear infinite;
+  }
 }

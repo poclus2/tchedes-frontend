@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef, Suspense } from "react";
+import { useState, useRef, Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { uploadHostedDocument, submitHostedSession } from "@/lib/api";
+import { useLiveness } from "@/hooks/useLiveness";
 
 function VerifyFlow() {
     const searchParams = useSearchParams();
@@ -14,7 +15,13 @@ function VerifyFlow() {
 
     const frontInputRef = useRef<HTMLInputElement>(null);
     const backInputRef = useRef<HTMLInputElement>(null);
-    const selfieInputRef = useRef<HTMLInputElement>(null);
+    
+    // WebRTC specific state
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [isStreaming, setIsStreaming] = useState(false);
+    
+    const { isModelLoaded, livenessScore, isSpoof, startDetection, stopDetection } = useLiveness();
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "front" | "back" | "selfie") => {
         if (!e.target.files || e.target.files.length === 0 || !token) return;
@@ -292,7 +299,7 @@ function VerifyFlow() {
                     </div>
                 )}
 
-                {/* 5. Selfie Capture */}
+                {/* 5. Selfie Capture with Liveness */}
                 {step === 5 && (
                     <div className="p-8">
                         <div className="flex justify-center space-x-1 mb-6">
@@ -304,7 +311,7 @@ function VerifyFlow() {
                         </div>
 
                         <h1 className="text-2xl font-bold text-slate-900 text-center mb-1">Take a clear selfie</h1>
-                        <p className="text-slate-500 text-sm text-center mb-6">We'll match this photo with your ID document.</p>
+                        <p className="text-slate-500 text-sm text-center mb-6">Position your face within the frame.</p>
 
                         {error && (
                             <div className="mb-4 p-3 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-bold text-center">
@@ -312,50 +319,107 @@ function VerifyFlow() {
                             </div>
                         )}
 
-                        <div className="relative aspect-square bg-slate-800 rounded-2xl overflow-hidden mb-6 flex items-center justify-center group cursor-pointer" onClick={() => selfieInputRef.current?.click()}>
+                        <div className="relative aspect-square bg-slate-800 rounded-2xl overflow-hidden mb-6 flex items-center justify-center group">
+                            
+                            {!isStreaming && (
+                                <button 
+                                    onClick={async () => {
+                                        try {
+                                            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                                            if (videoRef.current) {
+                                                videoRef.current.srcObject = stream;
+                                                setIsStreaming(true);
+                                                // Wait for video to be ready before starting detection
+                                                videoRef.current.onloadedmetadata = () => {
+                                                    startDetection(videoRef.current!);
+                                                };
+                                            }
+                                        } catch (e) {
+                                            setError("Camera access denied or unavailable.");
+                                        }
+                                    }}
+                                    className="absolute inset-0 flex flex-col items-center justify-center text-white bg-slate-800 z-20"
+                                >
+                                    <span className="material-symbols-outlined text-4xl mb-2">videocam</span>
+                                    <span className="font-bold">Enable Camera</span>
+                                </button>
+                            )}
 
-                            <div className="absolute top-4 bg-emerald-500/20 text-emerald-400 text-xs px-3 py-1 rounded-full flex items-center space-x-2 backdrop-blur-md">
-                                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-                                <span>Camera Active</span>
+                            <video 
+                                ref={videoRef} 
+                                autoPlay 
+                                playsInline 
+                                muted 
+                                className="absolute inset-0 w-full h-full object-cover transform -scale-x-100"
+                            />
+                            
+                            <canvas ref={canvasRef} className="hidden" />
+
+                            <div className="absolute top-4 bg-slate-900/40 text-white text-xs px-3 py-1 rounded-full flex items-center space-x-2 backdrop-blur-md z-10">
+                                <div className={`w-2 h-2 rounded-full ${isStreaming ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400'}`}></div>
+                                <span>{isStreaming ? 'Camera Active' : 'Camera Off'}</span>
                             </div>
 
-                            <div className="w-48 h-48 rounded-full border border-white/30 relative">
-                                <div className="absolute -top-2 -left-2 border-t-4 border-l-4 border-emerald-500 w-8 h-8 rounded-tl-xl"></div>
-                                <div className="absolute -top-2 -right-2 border-t-4 border-r-4 border-emerald-500 w-8 h-8 rounded-tr-xl"></div>
-                                <div className="absolute -bottom-2 -left-2 border-b-4 border-l-4 border-emerald-500 w-8 h-8 rounded-bl-xl"></div>
-                                <div className="absolute -bottom-2 -right-2 border-b-4 border-r-4 border-emerald-500 w-8 h-8 rounded-br-xl"></div>
+                            {/* Liveness HUD */}
+                            {isStreaming && isModelLoaded && (
+                                <div className={`absolute bottom-4 left-4 right-4 text-xs px-3 py-2 rounded-xl flex items-center justify-between backdrop-blur-md z-10 border ${isSpoof ? 'bg-red-500/20 border-red-500/50 text-red-100' : 'bg-emerald-500/20 border-emerald-500/50 text-emerald-100'}`}>
+                                    <span className="font-bold">{isSpoof ? 'SPOOF DETECTED' : 'LIVE FACE'}</span>
+                                    <span>Liveness: {livenessScore}%</span>
+                                </div>
+                            )}
+
+                            <div className="w-48 h-48 rounded-full border border-white/30 relative z-10">
+                                <div className={`absolute -top-2 -left-2 border-t-4 border-l-4 w-8 h-8 rounded-tl-xl transition-colors ${isSpoof ? 'border-red-500' : 'border-emerald-500'}`}></div>
+                                <div className={`absolute -top-2 -right-2 border-t-4 border-r-4 w-8 h-8 rounded-tr-xl transition-colors ${isSpoof ? 'border-red-500' : 'border-emerald-500'}`}></div>
+                                <div className={`absolute -bottom-2 -left-2 border-b-4 border-l-4 w-8 h-8 rounded-bl-xl transition-colors ${isSpoof ? 'border-red-500' : 'border-emerald-500'}`}></div>
+                                <div className={`absolute -bottom-2 -right-2 border-b-4 border-r-4 w-8 h-8 rounded-br-xl transition-colors ${isSpoof ? 'border-red-500' : 'border-emerald-500'}`}></div>
                             </div>
                         </div>
 
-                        <div className="bg-white border text-center border-slate-100 shadow-sm rounded-xl p-4 mb-6 relative z-10 -mt-12 mx-4">
-                            <div className="flex border-b border-slate-100 pb-3 mb-3">
-                                <div className="flex-1 border-r border-slate-100 px-2 flex flex-col items-center">
-                                    <span className="material-symbols-outlined text-yellow-500 bg-yellow-50 p-1.5 rounded-full mb-2">light_mode</span>
-                                    <p className="text-[10px] font-bold text-slate-800 mb-0.5">Ensure good lighting</p>
-                                    <p className="text-[9px] text-slate-500 leading-tight">Avoid shadows and glare</p>
-                                </div>
-                                <div className="flex-1 px-2 flex flex-col items-center">
-                                    <span className="material-symbols-outlined text-slate-600 bg-slate-100 p-1.5 rounded-full mb-2">face</span>
-                                    <p className="text-[10px] font-bold text-slate-800 mb-0.5">Remove accessories</p>
-                                    <p className="text-[9px] text-slate-500 leading-tight">Take off glasses or hats</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <input
-                            type="file"
-                            accept="image/*"
-                            capture="user"
-                            className="hidden"
-                            ref={selfieInputRef}
-                            onChange={async (e) => {
-                                await handleFileUpload(e, "selfie");
-                                proceedToProcessing();
-                            }}
-                        />
-                        <button disabled={isSubmitting} onClick={() => selfieInputRef.current?.click()} className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] transition-all text-white font-bold rounded-xl flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-wait">
+                        <button 
+                            disabled={isSubmitting || !isStreaming || isSpoof} 
+                            onClick={async () => {
+                                if (!videoRef.current || !canvasRef.current || !token) return;
+                                
+                                setIsSubmitting(true);
+                                setError(null);
+                                
+                                // Capture frame
+                                const canvas = canvasRef.current;
+                                const video = videoRef.current;
+                                canvas.width = video.videoWidth;
+                                canvas.height = video.videoHeight;
+                                const ctx = canvas.getContext('2d');
+                                if (!ctx) return;
+                                
+                                // Draw flipped image (mirror)
+                                ctx.translate(canvas.width, 0);
+                                ctx.scale(-1, 1);
+                                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                                
+                                canvas.toBlob(async (blob) => {
+                                    if (blob) {
+                                        const file = new File([blob], "selfie.jpg", { type: "image/jpeg" });
+                                        
+                                        // Stop stream
+                                        stopDetection();
+                                        const stream = video.srcObject as MediaStream;
+                                        stream?.getTracks().forEach(track => track.stop());
+                                        
+                                        try {
+                                            await uploadHostedDocument(token, file, "selfie");
+                                            proceedToProcessing();
+                                        } catch (err: any) {
+                                            setError(err.message || "Failed to upload selfie");
+                                            setIsSubmitting(false);
+                                        }
+                                    }
+                                }, 'image/jpeg', 0.9);
+                            }} 
+                            className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] transition-all text-white font-bold rounded-xl flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-wait"
+                        >
                             <span className="material-symbols-outlined">{isSubmitting ? "refresh" : "photo_camera"}</span>
-                            <span>{isSubmitting ? "Uploading..." : "Take Selfie"}</span>
+                            <span>{isSubmitting ? "Verifying..." : "Capture"}</span>
                         </button>
                     </div>
                 )}

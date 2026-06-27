@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/lib/api";
+import { CitySkyline } from "@/components/ui/city-skyline";
 
 export default function LoginPage() {
     const [accountType, setAccountType] = useState<"individual" | "business">("business");
@@ -34,7 +35,7 @@ export default function LoginPage() {
                 setIsSuccess(true);
                 // Use window.location.href for a hard redirect to ensure middleware picks up the cookie
                 setTimeout(() => {
-                    window.location.href = "/overview";
+                    window.location.href = "/portal";
                 }, 1000);
             }
         } catch (err: any) {
@@ -139,7 +140,11 @@ export default function LoginPage() {
             {/* Right Column - Illustration */}
             <div className="hidden lg:flex w-1/2 bg-slate-900 relative overflow-hidden items-center justify-center p-12">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
-                <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl -ml-20 -mb-20"></div>
+                <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl -ml-20 -mb-20 z-0"></div>
+                
+                {/* City Animation */}
+                <CitySkyline />
+
                 <div className="relative z-10 w-full max-w-md">
                     <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-6 mb-6 transform translate-x-4 shadow-2xl">
                         <div className="flex items-center justify-between mb-4">

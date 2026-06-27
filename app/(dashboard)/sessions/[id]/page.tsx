@@ -302,25 +302,55 @@ export default function SessionDetailsPage() {
                             <span className="material-symbols-outlined text-primary">history</span> Audit Timeline
                         </h2>
                         <div className="space-y-8 relative">
-                            <div className="relative pl-8">
-                                <div className="absolute left-0 top-0 w-6 h-6 rounded-full bg-green-100 border-2 border-primary flex items-center justify-center z-10">
-                                    <span className="material-symbols-outlined text-[12px] text-primary font-bold">check</span>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-slate-900 dark:text-white">Session Created</p>
-                                    <p className="text-xs text-slate-500 mt-0.5">{format(new Date(session.created_at || new Date()), "MMM dd, yyyy • HH:mm:ss")}</p>
-                                </div>
-                                <div className="absolute left-3 top-6 w-0.5 h-16 bg-slate-200 dark:bg-slate-700"></div>
-                            </div>
-                            <div className="relative pl-8">
-                                <div className={`absolute left-0 top-0 w-6 h-6 rounded-full ${session.status === 'processing' || session.status === 'created' ? 'bg-slate-100 border-slate-300' : 'bg-green-100 border-primary'} border-2 flex items-center justify-center z-10`}>
-                                    {session.status !== 'processing' && session.status !== 'created' && <span className="material-symbols-outlined text-[12px] text-primary font-bold">settings</span>}
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-slate-900 dark:text-white">Processing Data</p>
-                                    <p className="text-xs text-slate-500 mt-0.5">{session.status === 'processing' ? 'Currently processing...' : 'Completed'}</p>
-                                </div>
-                            </div>
+                            {session.AuditLogs && session.AuditLogs.length > 0 ? (
+                                session.AuditLogs.map((log: any, index: number) => {
+                                    let icon = "settings";
+                                    let color = "bg-slate-100 border-slate-300 text-slate-500";
+                                    let title = log.action;
+
+                                    if (log.action === 'session_created') {
+                                        icon = "add_circle";
+                                        color = "bg-blue-100 border-blue-500 text-blue-600";
+                                        title = "Session Created";
+                                    } else if (log.action === 'session_submitted') {
+                                        icon = "upload";
+                                        color = "bg-indigo-100 border-indigo-500 text-indigo-600";
+                                        title = "Documents Submitted";
+                                    } else if (log.action === 'ocr_extraction_completed') {
+                                        icon = "document_scanner";
+                                        color = "bg-purple-100 border-purple-500 text-purple-600";
+                                        title = "OCR Extraction";
+                                    } else if (log.action === 'biometric_match_completed') {
+                                        icon = "face";
+                                        color = "bg-teal-100 border-teal-500 text-teal-600";
+                                        title = "Biometric Match";
+                                    } else if (log.action === 'engine_decision') {
+                                        icon = log.new_state === 'verified' ? "check_circle" : log.new_state === 'rejected' ? "cancel" : "warning";
+                                        color = log.new_state === 'verified' ? "bg-emerald-100 border-emerald-500 text-emerald-600" : log.new_state === 'rejected' ? "bg-red-100 border-red-500 text-red-600" : "bg-amber-100 border-amber-500 text-amber-600";
+                                        title = `Decision: ${log.new_state.toUpperCase()}`;
+                                    }
+
+                                    return (
+                                        <div key={log.id} className="relative pl-8">
+                                            <div className={`absolute left-0 top-0 w-6 h-6 rounded-full border-2 flex items-center justify-center z-10 ${color}`}>
+                                                <span className="material-symbols-outlined text-[12px] font-bold">{icon}</span>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-900 dark:text-white">{title}</p>
+                                                <p className="text-xs text-slate-500 mt-0.5">{format(new Date(log.createdAt), "MMM dd, yyyy • HH:mm:ss")}</p>
+                                                {log.reason && (
+                                                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 italic">{log.reason}</p>
+                                                )}
+                                            </div>
+                                            {index < session.AuditLogs.length - 1 && (
+                                                <div className="absolute left-3 top-6 w-0.5 h-full bg-slate-200 dark:bg-slate-700"></div>
+                                            )}
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div className="text-sm text-slate-500 italic">No audit logs available.</div>
+                            )}
                         </div>
                     </section>
                 </div>
